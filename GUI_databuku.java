@@ -3,6 +3,15 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JFrame.java to edit this template
  */
 package TUGASPRAKTIKUM;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.swing.JOptionPane;
+import javax.swing.table.DefaultTableModel;
 import java.util.ArrayList;
 import java.util.List;
 import javax.swing.JOptionPane;
@@ -19,6 +28,7 @@ public class GUI_databuku extends javax.swing.JFrame {
      */
     public GUI_databuku() {
         initComponents();
+        tampil();
        /** Buku buku1 = new Buku();
         txt_judulbuku.setText(buku1.judulBuku);
         txt_pengarang.setText(buku1.pengarang);
@@ -27,16 +37,201 @@ public class GUI_databuku extends javax.swing.JFrame {
         txt_fiksi.setText(buku1.jenisBuku);
         txt_bindonesia.setText(buku1.bahasa);
         String statusKetersediaan = txt_ketersediaan.getText();**/
-       DefaultTableModel dataBuku = (DefaultTableModel)tabel_buku.getModel();
+       /**DefaultTableModel dataBuku = (DefaultTableModel)tabel_buku.getModel();
         int rowCount = dataBuku.getRowCount();
         while (rowCount > 0 )
         {
             dataBuku.removeRow(rowCount - 1);
             rowCount = dataBuku.getRowCount();
+        }**/
+        }
+    String judul1,pengarang1, penerbit1, thnterbit1, jenisbuku1, bahasa1, harga1, petugas1;
+    public Connection conn;
+    public void koneksi() throws SQLException {
+        try {
+            conn = null;
+            Class.forName("com.mysql.cj.jdbc.Driver");
+            conn = DriverManager.getConnection("jdbc:mysql://localhost/oop_perpustakaan?user=root&password=");
+        } catch (ClassNotFoundException ex) {
+            Logger.getLogger(GUI_databuku.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (SQLException e) {
+            Logger.getLogger(GUI_databuku.class.getName()).log(Level.SEVERE, null, e);
+        } catch (Exception es) {
+            Logger.getLogger(GUI_databuku.class.getName()).log(Level.SEVERE, null, es);
+        }
+    }
+
+    public void tampil() {
+        DefaultTableModel tabelhead = new DefaultTableModel();
+        tabelhead.addColumn("JUDUL BUKU");
+        tabelhead.addColumn("PENGARANG");
+        tabelhead.addColumn("PENERBIT");
+        tabelhead.addColumn("TAHUN TERBIT");
+        tabelhead.addColumn("JENIS BUKU");
+        tabelhead.addColumn("BAHASA");
+        tabelhead.addColumn("HARGA");
+        tabelhead.addColumn("PETUGAS");
+        try {
+            koneksi();
+            String sql = "SELECT * FROM tb_databuku";
+            Statement stat = conn.createStatement();
+            ResultSet res = stat.executeQuery(sql);
+            while (res.next()) {
+                tabelhead.addRow(new Object[]{res.getString(2), res.getString(3), res.getString(4), res.getString(5), res.getString(6), res.getString(7),res.getString(8),res.getString(9),});
+            }
+            tabel_buku.setModel(tabelhead);
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(null, "BELUM TERKONEKSI");
         }
     }
     
-    public void clear() {
+    public void refresh() {
+        new GUI_databuku().setVisible(true);
+        this.setVisible(false);
+    }
+    
+    public void insert() {
+        String judulbuku = txt_judulbuku.getText();
+        String pengarang = txt_pengarang.getText();
+        String penerbit = txt_penerbit.getText();
+        int thnterbit = (Integer.parseInt(txt_thnterbit.getText()));
+        String jenisbuku;
+        if (txt_fiksi.isSelected()) {
+            jenisbuku = "Fiksi";
+        } else {
+            jenisbuku = "Non Fiksi";
+        }
+        String jenisbahasa;
+        if (txt_bindonesia.isSelected()) {
+            jenisbahasa = "Indonesia";
+        } else if(txt_binggris.isSelected()) {
+            jenisbahasa = "Inggri";
+        }else{
+            jenisbahasa = "Arab";
+        }
+        int harga = (Integer.parseInt(txt_harga.getText()));
+        String petugas = txt_Petugas.getText();
+        try {
+            koneksi();
+            Statement statement = conn.createStatement();
+            statement.executeUpdate("INSERT INTO tb_databuku (judul_buku, pengarang,penerbit, th_terbit, jenis_buku, bahasa, harga, petugas)"
+            + "VALUES('" + judulbuku + "','" + pengarang + "','" + penerbit + "','" + thnterbit + "','" + jenisbuku + "','" + jenisbahasa + "','" + harga + "','" + petugas + "')");
+            statement.close();
+            JOptionPane.showMessageDialog(null, "Berhasil Memasukan Data Buku!" + "\n");
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(null, "Terjadi Kesalahan Input!");
+        }
+        refresh();
+    }
+    
+    public void update() {
+        String judulbuku = txt_judulbuku.getText();
+        String pengarang = txt_pengarang.getText();
+        String penerbit = txt_penerbit.getText();
+        int thnterbit = (Integer.parseInt(txt_thnterbit.getText()));
+        String jenisbuku;
+        if (txt_fiksi.isSelected()) {
+            jenisbuku = "Fiksi";
+        } else {
+            jenisbuku = "Non Fiksi";
+        }
+        String jenisbahasa;
+        if (txt_bindonesia.isSelected()) {
+            jenisbahasa = "Indonesia";
+        } else if(txt_binggris.isSelected()) {
+            jenisbahasa = "Inggris";
+        }else{
+            jenisbahasa = "Arab";
+        }
+        int harga = (Integer.parseInt(txt_harga.getText()));
+        String petugas = txt_Petugas.getText();
+        String judullama = judul1;
+        try {
+            Statement statement = conn.createStatement();
+            statement.executeUpdate("UPDATE tb_databuku SET judul_buku='" + judulbuku + "'," + "pengarang='" + pengarang + "'," + "penerbit='" + penerbit + "'" + ",th_terbit='" + thnterbit + "',jenis_buku='" + jenisbuku + "',bahasa='"+ jenisbahasa +"',harga='"+ harga +"',petugas='"+ petugas + "' WHERE judul_buku = '" + judullama + "'");
+            statement.close();
+            conn.close();
+            JOptionPane.showMessageDialog(null, "Update Data Buku Berhasil!");
+        } catch (Exception e) {
+            System.out.println("Error : " + e);
+        }
+        refresh();
+    }
+    
+    public void delete() {
+        int ok = JOptionPane.showConfirmDialog(null, "Apakah Anda yakin akan menghapus data ?", "Konfirmasi", JOptionPane.YES_NO_OPTION);
+        if (ok == 0) {
+            try {
+                String sql = "DELETE FROM tb_databuku WHERE judul_buku='" + txt_judulbuku.getText() + "'";
+                java.sql.PreparedStatement stmt = conn.prepareStatement(sql);
+                stmt.executeUpdate();
+                JOptionPane.showMessageDialog(null, "Data Berhasil di hapus");
+                batal();
+            } catch (Exception e) {
+                JOptionPane.showMessageDialog(null, "Data gagal di hapus");
+            }
+        }
+        refresh();
+    }
+    
+    public void cari() {
+        try {
+            try ( Statement statement = conn.createStatement()) {
+                String sql = "SELECT * FROM tb_databuku WHERE `judul_buku`  LIKE '%" + txt_search.getText() + "%'";
+                ResultSet rs = statement.executeQuery(sql); //menampilkan data dari sql query
+                if (rs.next()) // .next() = scanner method
+                {
+                    txt_judulbuku.setText(rs.getString(2));
+                    txt_pengarang.setText(rs.getString(3));
+                    txt_penerbit.setText(rs.getString(4));
+                    txt_thnterbit.setText(rs.getString(5));
+                    String jenisbuku = rs.getString(6);
+                    if (jenisbuku.equalsIgnoreCase("Fiksi")) {
+                        txt_fiksi.setSelected(true);
+                    } else {
+                        txt_nonfiksi.setSelected(true);
+                    }
+                    String jenisbahasa = rs.getString(7);
+                    if (jenisbahasa.equalsIgnoreCase("Indonesia")) {
+                        txt_bindonesia.setSelected(true);
+                    } else if (jenisbahasa.equalsIgnoreCase("Inggris")) {
+                        txt_binggris.setSelected(true);
+                    }else{
+                        txt_barab.setSelected(true);
+                    }
+                    txt_harga.setText(rs.getString(8));
+                    txt_Petugas.setText(rs.getString(9));
+                } else {
+                    JOptionPane.showMessageDialog(null, "Data yang Anda cari tidak ada");
+                }
+            }
+        } catch (Exception ex) {
+            System.out.println("Error." + ex);
+        }
+    }
+    
+    public void itempilih() {
+        txt_judulbuku.setText(judul1);
+        txt_pengarang.setText(pengarang1);
+        txt_penerbit.setText(penerbit1);
+        txt_thnterbit.setText(thnterbit1);
+        if (jenisbuku1.equalsIgnoreCase("Fiksi")) {
+            txt_fiksi.setSelected(true);
+        } else {
+            txt_nonfiksi.setSelected(true);
+        }
+        if (bahasa1.equalsIgnoreCase("Indonesia")) {
+            txt_bindonesia.setSelected(true);
+        } else if (bahasa1.equalsIgnoreCase("Inggris")) {
+            txt_binggris.setSelected(true);
+        }else{
+            txt_barab.setSelected(true);
+        }
+        txt_harga.setText(harga1);
+        txt_Petugas.setText(petugas1);
+    }
+    
+ public void clear() {
  txt_judulbuku.setText("");
  txt_pengarang.setText("");
  txt_penerbit.setText("");
@@ -86,6 +281,7 @@ public class GUI_databuku extends javax.swing.JFrame {
         jLabel11 = new javax.swing.JLabel();
         txt_Petugas = new javax.swing.JTextField();
         btnSearch = new javax.swing.JButton();
+        btnUbah = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -154,6 +350,11 @@ public class GUI_databuku extends javax.swing.JFrame {
                 "Judul Buku", "Pengarang", "Penerbit", "Tahun Terbit", "Jenis Buku", "Bahasa", "Harga", "Petugas"
             }
         ));
+        tabel_buku.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                tabel_bukuMouseClicked(evt);
+            }
+        });
         jScrollPane2.setViewportView(tabel_buku);
 
         btnHapus.setText("Hapus");
@@ -182,6 +383,18 @@ public class GUI_databuku extends javax.swing.JFrame {
         jLabel11.setText("Petugas");
 
         btnSearch.setText("Search");
+        btnSearch.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnSearchActionPerformed(evt);
+            }
+        });
+
+        btnUbah.setText("Ubah");
+        btnUbah.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnUbahActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -232,28 +445,28 @@ public class GUI_databuku extends javax.swing.JFrame {
                             .addComponent(txt_thnterbit)
                             .addComponent(txt_ketersediaan, javax.swing.GroupLayout.DEFAULT_SIZE, 164, Short.MAX_VALUE)
                             .addComponent(txt_Petugas))))
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 30, Short.MAX_VALUE)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                     .addGroup(layout.createSequentialGroup()
-                        .addGap(49, 49, 49)
                         .addComponent(btnSimpan)
-                        .addGap(54, 54, 54)
+                        .addGap(31, 31, 31)
                         .addComponent(btnHapus)
-                        .addGap(49, 49, 49)
+                        .addGap(33, 33, 33)
                         .addComponent(btnBatal)
-                        .addGap(37, 37, 37)
+                        .addGap(33, 33, 33)
                         .addComponent(btnClose)
-                        .addContainerGap())
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 30, Short.MAX_VALUE)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                                .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 567, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addGap(41, 41, 41))
-                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                                .addComponent(txt_search, javax.swing.GroupLayout.PREFERRED_SIZE, 105, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(btnSearch)
-                                .addGap(65, 65, 65))))))
+                        .addGap(18, 18, 18)
+                        .addComponent(btnUbah)
+                        .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                            .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 567, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addGap(41, 41, 41))
+                        .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                            .addComponent(txt_search, javax.swing.GroupLayout.PREFERRED_SIZE, 105, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                            .addComponent(btnSearch)
+                            .addGap(65, 65, 65)))))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -304,13 +517,15 @@ public class GUI_databuku extends javax.swing.JFrame {
                             .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 341, javax.swing.GroupLayout.PREFERRED_SIZE))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(btnSimpan)
-                            .addComponent(btnHapus)
                             .addComponent(btnBatal)
-                            .addComponent(btnClose)))
+                            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                .addComponent(btnClose)
+                                .addComponent(btnUbah))))
                     .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                         .addComponent(jLabel8)
-                        .addComponent(txt_ketersediaan, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addComponent(txt_ketersediaan, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(btnSimpan)
+                        .addComponent(btnHapus)))
                 .addGap(18, 18, 18)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel10)
@@ -343,8 +558,9 @@ public class GUI_databuku extends javax.swing.JFrame {
 
     private void btnSimpanActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSimpanActionPerformed
         // TODO add your handling code here:
+        insert();
      // Menampilkan pesan dialog bahwa data telah ditambahkan ke tabel 
-      JOptionPane.showMessageDialog(null, "Data anda Ditambahkan Ke tabel");
+     /** JOptionPane.showMessageDialog(null, "Data anda Ditambahkan Ke tabel");
  // Mengambil model data dari tabel
  DefaultTableModel dataBuku = (DefaultTableModel) tabel_buku.getModel();
  // Inisialisasi sebuah ArrayList bernama 'list'
@@ -383,8 +599,17 @@ tabel_buku.setAutoCreateColumnsFromModel(true);
  // Mengatur data Angkatan menggunakan nilai dari komponen txtAngkatan
   bukuA.datathnTerbit(Integer.parseInt(txt_thnterbit.getText()));
   
-  bukuA.setHargaBuku(Double.parseDouble(txt_harga.getText()));
+  
   bukuA.setnamaPetugas(txt_Petugas.getText());
+  try
+  {
+    bukuA.setHargaBuku(Double.parseDouble(txt_harga.getText()));  
+  }
+  catch (NumberFormatException e) {
+        // Tangani exception jika input tidak valid (bukan angka)
+        JOptionPane.showMessageDialog(this, "Masukkan Jumlah Harga denga Benar", "Error", JOptionPane.ERROR_MESSAGE);
+    } 
+  
  // Mengatur data Alamat menggunakan nilai dari komponen txtAlamat
  // Menambahkan data-data dari objek Mahasiswa ke dalam ArrayList 'list'
  list.add(bukuA.cetakJudul());
@@ -398,18 +623,19 @@ tabel_buku.setAutoCreateColumnsFromModel(true);
  // Menambahkan baris baru ke model tabel menggunakan data dari ArrayList 'list'
  dataBuku.addRow(list.toArray());
  // Memanggil fungsi 'clear' untuk membersihkan nilai dari komponen
- clear();
+ clear();**/
     }//GEN-LAST:event_btnSimpanActionPerformed
 
     private void btnHapusActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnHapusActionPerformed
         // TODO add your handling code here:
-         DefaultTableModel dataBuku = (DefaultTableModel)tabel_buku.getModel();
+        delete();
+        /**DefaultTableModel dataBuku = (DefaultTableModel)tabel_buku.getModel();
         int rowCount = dataBuku.getRowCount();
         while (rowCount > 0)
         {
             dataBuku.removeRow(rowCount - 1);
             rowCount = dataBuku.getRowCount();
-        }
+        }**/
     }//GEN-LAST:event_btnHapusActionPerformed
 
     private void btnBatalActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnBatalActionPerformed
@@ -421,6 +647,31 @@ tabel_buku.setAutoCreateColumnsFromModel(true);
         // TODO add your handling code here:
         dispose();
     }//GEN-LAST:event_btnCloseActionPerformed
+
+    private void tabel_bukuMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tabel_bukuMouseClicked
+        // TODO add your handling code here:
+        int tabel = tabel_buku.getSelectedRow();
+        judul1 = tabel_buku.getValueAt(tabel, 0).toString();
+        pengarang1 = tabel_buku.getValueAt(tabel, 1).toString();
+        penerbit1 = tabel_buku.getValueAt(tabel, 2).toString();
+        thnterbit1 = tabel_buku.getValueAt(tabel, 3).toString();
+        jenisbuku1 = tabel_buku.getValueAt(tabel, 4).toString();
+        bahasa1 = tabel_buku.getValueAt(tabel, 5).toString();
+        harga1 = tabel_buku.getValueAt(tabel, 5).toString();
+        petugas1 = tabel_buku.getValueAt(tabel, 5).toString();
+        itempilih();
+
+    }//GEN-LAST:event_tabel_bukuMouseClicked
+
+    private void btnUbahActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUbahActionPerformed
+        // TODO add your handling code here:
+        update();
+    }//GEN-LAST:event_btnUbahActionPerformed
+
+    private void btnSearchActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSearchActionPerformed
+        // TODO add your handling code here:
+        cari();
+    }//GEN-LAST:event_btnSearchActionPerformed
 
     /**
      * @param args the command line arguments
@@ -463,6 +714,7 @@ tabel_buku.setAutoCreateColumnsFromModel(true);
     private javax.swing.JButton btnHapus;
     private javax.swing.JButton btnSearch;
     private javax.swing.JButton btnSimpan;
+    private javax.swing.JButton btnUbah;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel10;
     private javax.swing.JLabel jLabel11;
@@ -489,4 +741,8 @@ tabel_buku.setAutoCreateColumnsFromModel(true);
     private javax.swing.JTextField txt_search;
     private javax.swing.JTextField txt_thnterbit;
     // End of variables declaration//GEN-END:variables
+
+    private void batal() {
+        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    }
 }

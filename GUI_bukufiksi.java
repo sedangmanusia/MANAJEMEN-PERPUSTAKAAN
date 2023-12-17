@@ -3,6 +3,15 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JFrame.java to edit this template
  */
 package TUGASPRAKTIKUM;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.swing.JOptionPane;
+import javax.swing.table.DefaultTableModel;
 import java.util.ArrayList;
 import java.util.List;
 import javax.swing.JOptionPane;
@@ -20,14 +29,193 @@ public class GUI_bukufiksi extends javax.swing.JFrame {
      */
     public GUI_bukufiksi() {
         initComponents();
-        DefaultTableModel dataBukuFiksi = (DefaultTableModel)tabel_buku_fiksi.getModel();
+        tampil();
+       /** DefaultTableModel dataBukuFiksi = (DefaultTableModel)tabel_buku_fiksi.getModel();
         int rowCount = dataBukuFiksi.getRowCount();
         while (rowCount > 0 )
         {
             dataBukuFiksi.removeRow(rowCount - 1);
             rowCount = dataBukuFiksi.getRowCount();
+        }**/
+    }
+    String judul1,pengarang1, penerbit1, thnterbit1, jenisbuku1,tingkatText1;
+    public Connection conn;
+    public void koneksi() throws SQLException {
+        try {
+            conn = null;
+            Class.forName("com.mysql.cj.jdbc.Driver");
+            conn = DriverManager.getConnection("jdbc:mysql://localhost/oop_perpustakaan?user=root&password=");
+        } catch (ClassNotFoundException ex) {
+            Logger.getLogger(GUI_bukufiksi.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (SQLException e) {
+            Logger.getLogger(GUI_bukufiksi.class.getName()).log(Level.SEVERE, null, e);
+        } catch (Exception es) {
+            Logger.getLogger(GUI_bukufiksi.class.getName()).log(Level.SEVERE, null, es);
         }
     }
+    
+    public void tampil() {
+        DefaultTableModel tabelhead = new DefaultTableModel();
+        tabelhead.addColumn("JUDUL BUKU");
+        tabelhead.addColumn("PENGARANG");
+        tabelhead.addColumn("PENERBIT");
+        tabelhead.addColumn("TAHUN TERBIT");
+        tabelhead.addColumn("GENRE");
+        try {
+            koneksi();
+            String sql = "SELECT * FROM tb_bukufiksi";
+            Statement stat = conn.createStatement();
+            ResultSet res = stat.executeQuery(sql);
+            while (res.next()) {
+                tabelhead.addRow(new Object[]{res.getString(2), res.getString(3), res.getString(4), res.getString(5), res.getString(6), });
+            }
+            tabel_buku_fiksi.setModel(tabelhead);
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(null, "BELUM TERKONEKSI");
+        }
+    }
+    
+    public void refresh() {
+        new GUI_bukufiksi().setVisible(true);
+        this.setVisible(false);
+    }
+    
+    public void insert() {
+        String judulbuku = txt_judulbuku.getText();
+        String pengarang = txt_pengarang.getText();
+        String penerbit = txt_penerbit.getText();
+        int thnterbit = (Integer.parseInt(txt_thnterbit.getText()));
+        String selectedTingkat = (String) cmb_pilih.getSelectedItem();
+    String tingkatText = "";
+    
+    if (selectedTingkat.equals("Horor")) {
+        tingkatText = "Horor";
+    } else if (selectedTingkat.equals("Romance")) {
+        tingkatText = "Romance";
+    } else if (selectedTingkat.equals("Sains Fiksi")) {
+        tingkatText = "Sains Fiksi";
+    } else if (selectedTingkat.equals("Petualangan")) {
+        tingkatText = "Petualangan";
+    } else if (selectedTingkat.equals("Komedi")) {
+        tingkatText = "Komedi";
+    }
+        try {
+            koneksi();
+            Statement statement = conn.createStatement();
+            statement.executeUpdate("INSERT INTO tb_bukufiksi (judul_buku, pengarang,penerbit, th_terbit, genre)"
+            + "VALUES('" + judulbuku + "','" + pengarang + "','" + penerbit + "','" + thnterbit + "','" + tingkatText + "')");
+            statement.close();
+            JOptionPane.showMessageDialog(null, "Berhasil Memasukan Data Buku!" + "\n");
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(null, "Terjadi Kesalahan Input!");
+        }
+        refresh();
+    }
+    
+    public void update() {
+        String judulbuku = txt_judulbuku.getText();
+        String pengarang = txt_pengarang.getText();
+        String penerbit = txt_penerbit.getText();
+        int thnterbit = (Integer.parseInt(txt_thnterbit.getText()));
+        String selectedTingkat = (String) cmb_pilih.getSelectedItem();
+        String tingkatText = "";
+    
+    if (selectedTingkat.equals("Horor")) {
+        tingkatText = "Horor";
+    } else if (selectedTingkat.equals("Romance")) {
+        tingkatText = "Romance";
+    } else if (selectedTingkat.equals("Sains Fiksi")) {
+        tingkatText = "Sains Fiksi";
+    } else if (selectedTingkat.equals("Petualangan")) {
+        tingkatText = "Petualangan";
+    } else if (selectedTingkat.equals("Komedi")) {
+        tingkatText = "Komedi";
+    }
+        String judullama = judul1;
+        try {
+            Statement statement = conn.createStatement();
+            statement.executeUpdate("UPDATE tb_bukufiksi SET judul_buku='" + judulbuku + "'," + "pengarang='" + pengarang + "'," + "penerbit='" + penerbit + "'" + ",th_terbit='" + thnterbit + "',genre='" + tingkatText  + "' WHERE judul_buku = '" + judullama + "'");
+            statement.close();
+            conn.close();
+            JOptionPane.showMessageDialog(null, "Update Data Buku Berhasil!");
+        } catch (Exception e) {
+            System.out.println("Error : " + e);
+        }
+        refresh();
+    }
+    
+    public void delete() {
+        int ok = JOptionPane.showConfirmDialog(null, "Apakah Anda yakin akan menghapus data ?", "Konfirmasi", JOptionPane.YES_NO_OPTION);
+        if (ok == 0) {
+            try {
+                String sql = "DELETE FROM tb_bukufiksi WHERE judul_buku='" + txt_judulbuku.getText() + "'";
+                java.sql.PreparedStatement stmt = conn.prepareStatement(sql);
+                stmt.executeUpdate();
+                JOptionPane.showMessageDialog(null, "Data Berhasil di hapus");
+                batal();
+            } catch (Exception e) {
+                JOptionPane.showMessageDialog(null, "Data gagal di hapus");
+            }
+        }
+        refresh();
+    }
+    
+    public void cari() {
+        try {
+            try ( Statement statement = conn.createStatement()) {
+                String sql = "SELECT * FROM tb_databuku WHERE `judul_buku`  LIKE '%" + txtSearch.getText() + "%'";
+                ResultSet rs = statement.executeQuery(sql); //menampilkan data dari sql query
+                if (rs.next()) // .next() = scanner method
+                {
+                    txt_judulbuku.setText(rs.getString(2));
+                    txt_pengarang.setText(rs.getString(3));
+                    txt_penerbit.setText(rs.getString(4));
+                    txt_thnterbit.setText(rs.getString(5));
+                    String tingkText = rs.getString(6);
+                    String selectedTingkat = (String) cmb_pilih.getSelectedItem();
+        String tingkatText = "";
+    
+    if (selectedTingkat.equals("Horor")) {
+        tingkatText = "Horor";
+    } else if (selectedTingkat.equals("Romance")) {
+        tingkatText = "Romance";
+    } else if (selectedTingkat.equals("Sains Fiksi")) {
+        tingkatText = "Sains Fiksi";
+    } else if (selectedTingkat.equals("Petualangan")) {
+        tingkatText = "Petualangan";
+    } else if (selectedTingkat.equals("Komedi")) {
+        tingkatText = "Komedi";
+    }
+                } else {
+                    JOptionPane.showMessageDialog(null, "Data yang Anda cari tidak ada");
+                }
+            }
+        } catch (Exception ex) {
+            System.out.println("Error." + ex);
+        }
+    }
+    
+    public void itempilih() {
+        txt_judulbuku.setText(judul1);
+        txt_pengarang.setText(pengarang1);
+        txt_penerbit.setText(penerbit1);
+        txt_thnterbit.setText(thnterbit1);
+        String selectedTingkat = (String) cmb_pilih.getSelectedItem();
+        String tingkatText = "";
+    
+    if (selectedTingkat.equals("Horor")) {
+        tingkatText = "Horor";
+    } else if (selectedTingkat.equals("Romance")) {
+        tingkatText = "Romance";
+    } else if (selectedTingkat.equals("Sains Fiksi")) {
+        tingkatText = "Sains Fiksi";
+    } else if (selectedTingkat.equals("Petualangan")) {
+        tingkatText = "Petualangan";
+    } else if (selectedTingkat.equals("Komedi")) {
+        tingkatText = "Komedi";
+    }
+    }
+
     
     public void clear() {
  txt_judulbuku.setText("");
@@ -68,6 +256,7 @@ public class GUI_bukufiksi extends javax.swing.JFrame {
         txtClose = new javax.swing.JButton();
         txtSearch = new javax.swing.JTextField();
         btnSearch = new javax.swing.JButton();
+        btnUbah = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -128,6 +317,11 @@ public class GUI_bukufiksi extends javax.swing.JFrame {
                 "Judul Buku", "Pengarang", "Penerbit", "Tahun Terbit", "Genre"
             }
         ));
+        tabel_buku_fiksi.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                tabel_buku_fiksiMouseClicked(evt);
+            }
+        });
         jScrollPane2.setViewportView(tabel_buku_fiksi);
 
         txtHapus.setText("Hapus");
@@ -152,6 +346,18 @@ public class GUI_bukufiksi extends javax.swing.JFrame {
         });
 
         btnSearch.setText("Search");
+        btnSearch.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnSearchActionPerformed(evt);
+            }
+        });
+
+        btnUbah.setText("Ubah");
+        btnUbah.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnUbahActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -185,11 +391,13 @@ public class GUI_bukufiksi extends javax.swing.JFrame {
                                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                                     .addGroup(layout.createSequentialGroup()
                                         .addComponent(txtSimpan)
-                                        .addGap(58, 58, 58)
+                                        .addGap(18, 18, 18)
                                         .addComponent(txtHapus)
-                                        .addGap(57, 57, 57)
-                                        .addComponent(txtBatal)
+                                        .addGap(18, 18, 18)
+                                        .addComponent(btnUbah)
                                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                        .addComponent(txtBatal)
+                                        .addGap(18, 18, 18)
                                         .addComponent(txtClose))
                                     .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 537, javax.swing.GroupLayout.PREFERRED_SIZE)))
                             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
@@ -239,7 +447,8 @@ public class GUI_bukufiksi extends javax.swing.JFrame {
                     .addComponent(txtSimpan)
                     .addComponent(txtHapus)
                     .addComponent(txtBatal)
-                    .addComponent(txtClose))
+                    .addComponent(txtClose)
+                    .addComponent(btnUbah))
                 .addContainerGap(28, Short.MAX_VALUE))
         );
 
@@ -260,7 +469,8 @@ public class GUI_bukufiksi extends javax.swing.JFrame {
 
     private void txtSimpanActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtSimpanActionPerformed
         // TODO add your handling code here:
-    JOptionPane.showMessageDialog(null, "Data anda Ditambahkan Ke tabel");
+        insert();
+    /**JOptionPane.showMessageDialog(null, "Data anda Ditambahkan Ke tabel");
  // Mengambil model data dari tabel
  DefaultTableModel dataBukuFiksi = (DefaultTableModel) tabel_buku_fiksi.getModel();
  // Inisialisasi sebuah ArrayList bernama 'list'
@@ -304,7 +514,7 @@ tabel_buku_fiksi.setAutoCreateColumnsFromModel(true);
  // Menambahkan baris baru ke model tabel menggunakan data dari ArrayList 'list'
  dataBukuFiksi.addRow(list.toArray());
  // Memanggil fungsi 'clear' untuk membersihkan nilai dari komponen
- clear();
+ clear();**/
         
     /**boolean isAuthenticated = Hujan.cekRating(rating);
     if(isAuthenticated)
@@ -348,13 +558,14 @@ tabel_buku_fiksi.setAutoCreateColumnsFromModel(true);
 
     private void txtHapusActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtHapusActionPerformed
         // TODO add your handling code here:
-        DefaultTableModel dataBukuFiksi = (DefaultTableModel)tabel_buku_fiksi.getModel();
+        delete();
+       /** DefaultTableModel dataBukuFiksi = (DefaultTableModel)tabel_buku_fiksi.getModel();
         int rowCount = dataBukuFiksi.getRowCount();
         while (rowCount > 0)
         {
             dataBukuFiksi.removeRow(rowCount - 1);
             rowCount = dataBukuFiksi.getRowCount();
-        }
+        }**/
     }//GEN-LAST:event_txtHapusActionPerformed
 
     private void txtBatalActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtBatalActionPerformed
@@ -366,6 +577,28 @@ tabel_buku_fiksi.setAutoCreateColumnsFromModel(true);
         // TODO add your handling code here:
         dispose();
     }//GEN-LAST:event_txtCloseActionPerformed
+
+    private void tabel_buku_fiksiMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tabel_buku_fiksiMouseClicked
+        // TODO add your handling code here:
+        int tabel = tabel_buku_fiksi.getSelectedRow();
+        judul1 = tabel_buku_fiksi.getValueAt(tabel, 0).toString();
+        pengarang1 = tabel_buku_fiksi.getValueAt(tabel, 1).toString();
+        penerbit1 = tabel_buku_fiksi.getValueAt(tabel, 2).toString();
+        thnterbit1 = tabel_buku_fiksi.getValueAt(tabel, 3).toString();
+        jenisbuku1 = tabel_buku_fiksi.getValueAt(tabel, 4).toString();
+        tingkatText1 = tabel_buku_fiksi.getValueAt(tabel, 5).toString();
+        itempilih();
+    }//GEN-LAST:event_tabel_buku_fiksiMouseClicked
+
+    private void btnUbahActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUbahActionPerformed
+        // TODO add your handling code here:
+        update();
+    }//GEN-LAST:event_btnUbahActionPerformed
+
+    private void btnSearchActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSearchActionPerformed
+        // TODO add your handling code here:
+        cari();
+    }//GEN-LAST:event_btnSearchActionPerformed
 
     /**
      * @param args the command line arguments
@@ -404,6 +637,7 @@ tabel_buku_fiksi.setAutoCreateColumnsFromModel(true);
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnSearch;
+    private javax.swing.JButton btnUbah;
     private javax.swing.JComboBox<String> cmb_pilih;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
@@ -425,4 +659,8 @@ tabel_buku_fiksi.setAutoCreateColumnsFromModel(true);
     private javax.swing.JTextField txt_rating;
     private javax.swing.JTextField txt_thnterbit;
     // End of variables declaration//GEN-END:variables
+
+    private void batal() {
+        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    }
 }
